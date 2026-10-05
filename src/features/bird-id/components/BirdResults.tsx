@@ -7,7 +7,7 @@ export interface BirdResultsProps {
   isStub?: boolean;
 }
 
-export function BirdResults({ predictions, region, isStub }: BirdResultsProps) {
+export function BirdResults({ predictions, region, isStub = false }: BirdResultsProps) {
   return (
     <section aria-label="Bird identification results" className="space-y-4">
       {isStub && (

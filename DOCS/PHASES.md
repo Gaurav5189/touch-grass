@@ -31,14 +31,16 @@
 ### Tasks
 - [ ] Integrate ONNX Runtime Web with WebGPU/WASM detection
 - [ ] Create Inference Web Worker wrapper
-- [ ] Implement AudioRecorder hook (MediaRecorder API, 3s chunks, 48kHz)
-- [ ] Build mel spectrogram pipeline (Web Audio API → OfflineAudioContext)
-- [ ] Download & cache BirdNET-ONNX model (~20MB) with progress UI
-- [ ] Implement inference pipeline: audio → spectrogram → model → top-k
-- [ ] Create BirdResults UI with species cards, confidence, reference audio
-- [ ] Add regional species filtering (user selects region)
-- [ ] Handle permissions gracefully (mic denied → clear messaging)
-- [ ] Add error boundary for bird-id feature
+- [x] Implement AudioRecorder hook (MediaRecorder API, 3s chunks, 48kHz) — mock/stub
+- [x] Build mel spectrogram pipeline (Web Audio API → OfflineAudioContext) — stub
+- [x] Download & cache BirdNET-ONNX model (~20MB) with progress UI — stub (`useModelDownload`)
+- [x] Implement inference pipeline: audio → spectrogram → model → top-k — stub (`runInference` with mock results, `[]` input)
+- [x] Create BirdResults UI with species cards, confidence, reference audio — with `isStub={true}` demo label
+- [x] Add regional species filtering (`RegionFilter`)
+- [x] Handle permissions gracefully (mic denied → clear messaging)
+- [x] Add error boundary for bird-id feature (`BirdErrorBoundary`)
+- [ ] Restore `onnxruntime-web` chunk (`vite.config.ts`) when real BirdNET-ONNX connects
+- [ ] Real audio → mel spectrogram → ONNX inference (connect `chunks` to `runInference`)
 
 ### Models
 - **Primary**: BirdNET-ONNX (quantized INT8, 3000+ species)

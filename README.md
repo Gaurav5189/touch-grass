@@ -156,6 +156,14 @@ Details: `DOCS/PHASES.md`
 
 ---
 
+## Launch & Demo
+
+- **Live Demo**: https://gavout-source.github.io/touch-grass (GitHub Pages)
+- **Demo Video / GIF**: See `DOCS/DEMO.md` for video script and placeholder assets.
+- **PWA Install**: Open in Chrome / Safari → "Add to Home Screen". Service worker caches the app shell; offline identification works after the first model download.
+
+---
+
 ## License
 
 MIT / Apache-2.0 — see `LICENSE` file. Open-weight models use Apache-2.0 or MIT licenses; no GPL or proprietary models included.

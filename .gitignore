@@ -15,7 +15,7 @@ out/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.agents/
+agents/
 
 # Environment
 .env

@@ -39,6 +39,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
+          onnx: ['onnxruntime-web'], // Phase 1 restored; use non-SIMD WASM build or different host for <25MB limit
         },
       },
     },
