@@ -44,7 +44,7 @@
 
 ### Models
 - **Primary**: BirdNET-ONNX (quantized INT8, 3000+ species)
-- **Source**: https://github.com/kahst/BirdNET-ONNX (Apache-2.0)
+- **Source**: https://github.com/birdnet-team/BirdNET-Analyzer (Apache-2.0)
 - **Fallback**: Custom regional model (~5MB, top 100 species)
 
 ### Acceptance Criteria

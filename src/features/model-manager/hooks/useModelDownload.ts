@@ -15,7 +15,7 @@ export function useModelDownload(): ModelDownloadHook {
   const [installed, setInstalled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startDownload = useCallback(async (url: string = 'https://github.com/kahst/BirdNET-ONNX/releases/download/v1.0/birdnet.onnx', id: string = 'birdnet-v1', version: string = '1.0', sizeBytes: number = 20971520) => {
+  const startDownload = useCallback(async (url: string = 'https://huggingface.co/justinchuby/BirdNET-onnx/resolve/main/model.onnx', id: string = 'birdnet-v1', version: string = '1.0', sizeBytes: number = 20971520) => {
     setDownloading(true);
     setProgress(0);
     setError(null);

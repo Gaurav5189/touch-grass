@@ -4,7 +4,7 @@ export const MODEL_REGISTRY: ModelInfo[] = [
   {
     id: 'birdnet-onnx-v1',
     name: 'BirdNET-ONNX',
-    url: 'https://github.com/kahst/BirdNET-ONNX/releases/download/v1.0/birdnet.onnx',
+    url: 'https://huggingface.co/justinchuby/BirdNET-onnx/resolve/main/model.onnx',
     sizeBytes: 20_000_000,
     version: '1.0.0',
     region: 'Global',

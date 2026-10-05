@@ -34,7 +34,7 @@ Audio / Image → Preprocessing (Web Audio / Canvas) → ONNX Runtime Web (Worke
 
 ## Open-Source AI Emphasis
 
-- **BirdNET-ONNX**: Quantized INT8 model (~20MB), 3000+ species, Apache-2.0 license (`https://github.com/kahst/BirdNET-ONNX`)
+- **BirdNET-ONNX**: Quantized INT8 model (~20MB), 3000+ species, Apache-2.0 license (`https://github.com/birdnet-team/BirdNET-Analyzer`)
 - **Plant / Insect Model**: MobileNetV3 + custom iNaturalist head (~5MB), fine-tuned on public iNaturalist 2021 data (Apache-2.0 / CC-BY)
 - All model sources and licenses documented in `DOCS/RULES.md`
 - No proprietary or GPL models included
@@ -58,8 +58,8 @@ The app supports custom ONNX model uploads through the Model Manager. Users can 
 
 ## Live Demo & Source
 
-- **Live Demo**: https://gavout-source.github.io/touch-grass
-- **GitHub Repo**: https://github.com/gavout-source/touch-grass
+- **Live Demo**: https://Gaurav5189.github.io/touch-grass
+- **GitHub Repo**: https://github.com/Gaurav5189/touch-grass
 - **License**: MIT / Apache-2.0
 - **Build**: `npm install && npm run build`
 
