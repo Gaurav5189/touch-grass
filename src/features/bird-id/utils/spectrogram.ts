@@ -1,4 +1,4 @@
-export async function computeMelSpectrogram(audioBuffer: AudioBuffer, sampleRate = 48000): Promise<Float32Array[]> {
+export async function computeMelSpectrogram(audioBuffer: AudioBuffer, _sampleRate = 48000): Promise<Float32Array[]> {
   const frameLength = 2048;
   const hopLength = 512;
   const numMelBins = 64;

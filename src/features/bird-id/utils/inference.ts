@@ -1,4 +1,4 @@
-import { detectBackend } from '../../shared/utils/backend-detector';
+import { detectBackend } from '../../../shared/utils/backend-detector';
 
 export interface BirdPrediction {
   species: string;
@@ -7,7 +7,7 @@ export interface BirdPrediction {
   commonName?: string;
 }
 
-export async function runInference(spectrogramFrames: Float32Array[]): Promise<BirdPrediction[]> {
+export async function runInference(_spectrogramFrames: Float32Array[]): Promise<BirdPrediction[]> {
   const backend = detectBackend();
   console.log('Running inference with backend:', backend);
 

@@ -1,18 +1,18 @@
 import { useState } from 'react';
-import { BirdResults } from './BirdResults';
-import { RegionFilter } from './RegionFilter';
-import { AudioRecorder } from './AudioRecorder';
-import { BirdErrorBoundary } from './BirdErrorBoundary';
-import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { runInference, BirdPrediction } from '../utils/inference';
-import { useModelDownload } from '../../model-manager/hooks/useModelDownload';
+import { BirdResults } from './components/BirdResults';
+import { RegionFilter } from './components/RegionFilter';
+import { AudioRecorder } from './components/AudioRecorder';
+import { BirdErrorBoundary } from './components/BirdErrorBoundary';
+import { useAudioRecorder } from './hooks/useAudioRecorder';
+import { runInference, BirdPrediction } from './utils/inference';
+import { useModelDownload } from '../model-manager/hooks/useModelDownload';
 
 export function BirdIdPage() {
   const [region, setRegion] = useState('global');
   const [results, setResults] = useState<BirdPrediction[] | null>(null);
   const [isInferring, setIsInferring] = useState(false);
 
-  const { start, stop, reset, isRecording, chunks, error, permission } = useAudioRecorder();
+  const { start, stop, isRecording, chunks, error, permission } = useAudioRecorder();
   const { progress, downloading, installed, startDownload } = useModelDownload();
 
   const handleRecordComplete = async () => {
@@ -49,7 +49,16 @@ export function BirdIdPage() {
 
         <RegionFilter selected={region} onSelect={setRegion} />
 
-        <AudioRecorder />
+        <AudioRecorder isRecording={isRecording} onStart={start} onStop={stop} />
+
+        {chunks.length > 0 && !results && !isInferring && (
+          <button
+            onClick={handleRecordComplete}
+            className="px-6 py-3 rounded-full bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary)]/90"
+          >
+            Identify Bird
+          </button>
+        )}
 
         {permission === 'denied' && error && (
           <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-900 text-sm" role="alert">

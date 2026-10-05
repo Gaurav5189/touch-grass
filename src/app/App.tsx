@@ -1,11 +1,11 @@
 import { Layout } from '../shared/components/Layout';
+import { BirdIdPage } from '../features/bird-id/BirdIdPage';
 
 export function App() {
   return (
     <Layout>
-      <section id="bird" className="max-w-3xl mx-auto px-4 py-8" aria-label="Bird identification">
-        <h2 className="text-2xl font-bold mb-4">Bird Call ID</h2>
-        <p className="text-[var(--text-muted)]">Record 3-second audio to identify bird species offline.</p>
+      <section id="bird" aria-label="Bird identification">
+        <BirdIdPage />
       </section>
       <section id="photo" className="max-w-3xl mx-auto px-4 py-8" aria-label="Photo identification">
         <h2 className="text-2xl font-bold mb-4">Plant & Insect ID</h2>

@@ -11,8 +11,8 @@ export function BirdResults({ predictions, region }: BirdResultsProps) {
     <section aria-label="Bird identification results" className="space-y-4">
       {region && <p className="text-xs uppercase tracking-wider text-[var(--text-muted)]">Region: {region}</p>}
       <div className="grid gap-3">
-        {predictions.map((pred, idx) => (
-          <article key={pred.scientificName} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+        {predictions.map((pred) => (
+          <article key={pred.species} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-bold text-[var(--text)]">{pred.species}</h3>
