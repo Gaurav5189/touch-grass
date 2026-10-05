@@ -15,8 +15,13 @@ export function BirdIdPage() {
   const { start, stop, isRecording, chunks, error, permission } = useAudioRecorder();
   const { progress, downloading, installed, startDownload } = useModelDownload();
 
+  const handleStart = () => {
+    setResults(null);
+    start();
+  };
+
   const handleRecordComplete = async () => {
-    if (chunks.length === 0) return;
+    if (!installed || chunks.length === 0) return;
     setIsInferring(true);
     // In real pipeline: decode audio → mel spectrogram → inference
     // Here we use mock inference
@@ -49,7 +54,7 @@ export function BirdIdPage() {
 
         <RegionFilter selected={region} onSelect={setRegion} />
 
-        <AudioRecorder isRecording={isRecording} onStart={start} onStop={stop} />
+        <AudioRecorder isRecording={isRecording} onStart={handleStart} onStop={stop} />
 
         {chunks.length > 0 && !results && !isInferring && (
           <button
@@ -72,7 +77,7 @@ export function BirdIdPage() {
           </div>
         )}
 
-        {results && <BirdResults predictions={results} region={region} />}
+        {results && <BirdResults predictions={results} region={region} isStub={true} />}
 
         {isInferring && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-center">

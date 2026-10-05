@@ -4,11 +4,17 @@ import { BirdPrediction } from '../utils/inference';
 export interface BirdResultsProps {
   predictions: BirdPrediction[];
   region?: string;
+  isStub?: boolean;
 }
 
-export function BirdResults({ predictions, region }: BirdResultsProps) {
+export function BirdResults({ predictions, region, isStub }: BirdResultsProps) {
   return (
     <section aria-label="Bird identification results" className="space-y-4">
+      {isStub && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 font-medium" role="note">
+          Demo results — using stub model (not real audio inference). Real BirdNET-ONNX pipeline coming in Phase 1 milestone.
+        </div>
+      )}
       {region && <p className="text-xs uppercase tracking-wider text-[var(--text-muted)]">Region: {region}</p>}
       <div className="grid gap-3">
         {predictions.map((pred) => (
