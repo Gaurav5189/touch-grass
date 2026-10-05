@@ -1,0 +1,53 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  :root {
+    --bg: #f8faf6;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #5e5e5e;
+    --primary: #1b5e20;
+    --primary-light: #eaf2e8;
+    --border: #d6e6d1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root.auto {
+      --bg: #121212;
+      --surface: #1e1e1e;
+      --text: #f0f0f0;
+      --text-muted: #aaaaaa;
+      --primary: #78a375;
+      --primary-light: #1b2e1a;
+      --border: #2e3b2b;
+    }
+  }
+
+  html.dark {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --text: #f0f0f0;
+    --text-muted: #aaaaaa;
+    --primary: #78a375;
+    --primary-light: #1b2e1a;
+    --border: #2e3b2b;
+  }
+
+  html.light {
+    --bg: #f8faf6;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #5e5e5e;
+    --primary: #1b5e20;
+    --primary-light: #eaf2e8;
+    --border: #d6e6d1;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+}
