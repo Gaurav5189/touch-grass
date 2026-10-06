@@ -5,7 +5,6 @@ import { AudioRecorder } from './components/AudioRecorder';
 import { BirdErrorBoundary } from './components/BirdErrorBoundary';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { runInference, BirdPrediction } from './utils/inference';
-import { computeMelSpectrogram } from './utils/spectrogram';
 import { useModelDownload } from '../model-manager/hooks/useModelDownload';
 import { useObservations } from '../history/hooks/useObservations';
 
@@ -45,8 +44,8 @@ export function BirdIdPage() {
       const combinedBuffer =
         audioBuffers[0] || new OfflineAudioContext(1, 48000, 48000).createBuffer(1, 48000, 48000);
 
-      const spectrogramFrames = await computeMelSpectrogram(combinedBuffer, 48000);
-      const predictions = await runInference(spectrogramFrames);
+      const rawAudioSamples = combinedBuffer.getChannelData(0);
+      const predictions = await runInference(rawAudioSamples);
       setResults(predictions);
       // Auto-save top prediction
       if (predictions.length > 0) {
@@ -58,7 +57,7 @@ export function BirdIdPage() {
             scientificName: top.scientificName,
             confidence: top.confidence,
             timestamp: Date.now(),
-            modelVersion: installed ? 'birdnet-onnx-v1' : 'birdnet-stub-v1',
+            modelVersion: top.isRealModel ? 'birdnet-onnx-v1' : 'birdnet-stub-v1',
           });
         } catch (e) {
           console.error('Auto-save failed:', e);
@@ -135,7 +134,7 @@ export function BirdIdPage() {
           </div>
         )}
 
-        {results && <BirdResults predictions={results} region={region} />}
+        {results && <BirdResults predictions={results} region={region} isStub={!results[0]?.isRealModel} />}
 
         {isInferring && (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-center" aria-live="polite" aria-label="Analyzing bird audio">

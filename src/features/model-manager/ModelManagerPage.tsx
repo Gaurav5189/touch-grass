@@ -71,6 +71,7 @@ export function ModelManagerPage() {
           version,
           downloadedAt: Date.now(),
           sizeBytes: blob.size || totalExpected,
+          modelBlob: blob,
         });
 
         setModelState(id, { downloading: false, progress: 100 });
@@ -116,6 +117,7 @@ export function ModelManagerPage() {
       version: metadata.version,
       downloadedAt: Date.now(),
       sizeBytes: file.size,
+      modelBlob: file,
     });
     await refresh();
   };

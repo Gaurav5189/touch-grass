@@ -12,16 +12,18 @@ export function preprocessImage(imageSource: HTMLImageElement | HTMLCanvasElemen
   ctx.drawImage(imageSource, 0, 0, 224, 224);
   const imageData = ctx.getImageData(0, 0, 224, 224);
   const data = imageData.data; // RGBA array
-  const floatArray = new Float32Array(224 * 224 * 3); // RGB only
+  const numPixels = 224 * 224;
+  const floatArray = new Float32Array(3 * numPixels); // NCHW: [1, 3, 224, 224]
 
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i] / 255.0;
-    const g = data[i + 1] / 255.0;
-    const b = data[i + 2] / 255.0;
-    const pixelIndex = Math.floor(i / 4);
-    floatArray[pixelIndex * 3] = r;
-    floatArray[pixelIndex * 3 + 1] = g;
-    floatArray[pixelIndex * 3 + 2] = b;
+  // ImageNet normalization constants: mean = [0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225]
+  for (let i = 0; i < numPixels; i++) {
+    const r = data[i * 4] / 255.0;
+    const g = data[i * 4 + 1] / 255.0;
+    const b = data[i * 4 + 2] / 255.0;
+
+    floatArray[i] = (r - 0.485) / 0.229; // Red channel
+    floatArray[numPixels + i] = (g - 0.456) / 0.224; // Green channel
+    floatArray[2 * numPixels + i] = (b - 0.406) / 0.225; // Blue channel
   }
 
   return floatArray;

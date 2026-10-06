@@ -1,38 +1,19 @@
 import { useState, useCallback } from 'react';
 import { PhotoResult } from '../types';
+import { getModelSession, ort } from '../../../shared/utils/onnx';
+import { IMAGENET_LABELS } from '../utils/imagenetLabels';
 
 export interface PhotoInferenceHook {
   results: PhotoResult[] | null;
   isInferring: boolean;
+  isStub: boolean;
   error: string | null;
-  infer: (_tensor: Float32Array) => Promise<void>;
+  infer: (tensor: Float32Array) => Promise<void>;
   reset: () => void;
 }
 
-/** 
- * Hash tensor pixel data into a seed.
- * Samples 64 evenly-spaced floats, maps each to a 16-bit integer,
- * and chains with djb2 so visually different images give different seeds.
- */
-function tensorSeed(tensor: Float32Array): number {
-  let h = 5381;
-  const step = Math.max(1, Math.floor(tensor.length / 64));
-  for (let i = 0; i < tensor.length; i += step) {
-    // Scale to 0-65535 range to preserve fractional differences
-    const v = ((tensor[i] + 1) * 32767.5) | 0;
-    h = (((h << 5) + h) ^ v) >>> 0; // djb2 XOR variant
-  }
-  // XOR in length so even same-content tensors of different sizes differ
-  return (h ^ tensor.length) >>> 0;
-}
-
-/** Seeded pseudo-random number in [0,1) */
-function seededRand(seed: number, index: number): number {
-  const x = Math.sin(seed * 9301 + index * 49297 + 233) * 10000;
-  return x - Math.floor(x);
-}
-
-const ALL_RESULTS: PhotoResult[] = [
+/** Fallback species list when model has not been downloaded yet */
+const FALLBACK_SPECIES: PhotoResult[] = [
   {
     species: 'Common Milkweed',
     scientificName: 'Asclepias syriaca',
@@ -105,43 +86,111 @@ const ALL_RESULTS: PhotoResult[] = [
   },
 ];
 
+function getFallbackResults(tensor: Float32Array): PhotoResult[] {
+  let h = 5381;
+  const step = Math.max(1, Math.floor(tensor.length / 64));
+  for (let i = 0; i < tensor.length; i += step) {
+    const v = ((tensor[i] + 1) * 32767.5) | 0;
+    h = (((h << 5) + h) ^ v) >>> 0;
+  }
+  const seed = (h ^ (Date.now() & 0xffff)) >>> 0;
+
+  const pool = [...FALLBACK_SPECIES];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const r = Math.sin(seed * 9301 + i * 49297 + 233) * 10000;
+    const j = Math.floor((r - Math.floor(r)) * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  return pool.slice(0, 5).map((item, idx) => {
+    const noise = Math.sin(seed + idx) * 0.08;
+    return {
+      ...item,
+      confidence: Math.max(0.5, Math.min(0.97, item.confidence + noise)),
+    };
+  }).sort((a, b) => b.confidence - a.confidence);
+}
+
 export function usePhotoInference(): PhotoInferenceHook {
   const [results, setResults] = useState<PhotoResult[] | null>(null);
   const [isInferring, setIsInferring] = useState(false);
+  const [isStub, setIsStub] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const infer = useCallback(async (tensor: Float32Array) => {
     setError(null);
     setIsInferring(true);
     setResults(null);
+
     try {
-      // Simulate inference latency
-      await new Promise((r) => setTimeout(r, 600 + Math.random() * 400));
+      // 1. Check if on-device model is available in IndexedDB
+      const session = await getModelSession('mobilenet-plants-v1');
 
-      // Seed from image content XOR'd with timestamp — different images AND retries vary
-      const seed = (tensorSeed(tensor) ^ (Date.now() & 0xffff)) >>> 0;
+      if (session) {
+        // Run Real ONNX inference
+        console.log('Running REAL ONNX model inference for image...');
+        const inputName = session.inputNames[0] || 'data';
+        const inputTensor = new ort.Tensor('float32', tensor, [1, 3, 224, 224]);
+        const outputMap = await session.run({ [inputName]: inputTensor });
 
-      // Fisher-Yates shuffle with seeded PRNG
-      const pool = [...ALL_RESULTS];
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(seededRand(seed, i) * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
+        const outputName = session.outputNames[0];
+        const outputTensor = outputMap[outputName];
+        const logits = outputTensor.data as Float32Array;
+
+        // Compute numerically stable Softmax
+        let maxLogit = -Infinity;
+        for (let i = 0; i < logits.length; i++) {
+          if (logits[i] > maxLogit) maxLogit = logits[i];
+        }
+
+        let sumExp = 0;
+        const expScores = new Float32Array(logits.length);
+        for (let i = 0; i < logits.length; i++) {
+          expScores[i] = Math.exp(logits[i] - maxLogit);
+          sumExp += expScores[i];
+        }
+
+        const probabilities = new Float32Array(logits.length);
+        for (let i = 0; i < logits.length; i++) {
+          probabilities[i] = expScores[i] / (sumExp || 1);
+        }
+
+        // Get Top 5 Predictions
+        const indexed = Array.from({ length: probabilities.length }, (_, i) => ({
+          index: i,
+          score: probabilities[i],
+        }));
+        indexed.sort((a, b) => b.score - a.score);
+        const top5 = indexed.slice(0, 5);
+
+        const realResults: PhotoResult[] = top5.map((item) => {
+          const label = IMAGENET_LABELS[item.index] || {
+            name: `Species ${item.index}`,
+            synsetId: `class-${item.index}`,
+          };
+          return {
+            species: label.name,
+            scientificName: `${label.synsetId} • ${label.name}`,
+            confidence: Math.max(0.1, Math.min(0.99, item.score)),
+            description: `Classified via on-device MobileNet neural network.`,
+            similar: top5
+              .filter((t) => t.index !== item.index)
+              .slice(0, 2)
+              .map((t) => IMAGENET_LABELS[t.index]?.name || `Class ${t.index}`),
+          };
+        });
+
+        setIsStub(false);
+        setResults(realResults);
+      } else {
+        // Fallback demo mode when model is not yet downloaded
+        console.log('MobileNet ONNX model not yet downloaded to IndexedDB. Using offline demo preview.');
+        await new Promise((r) => setTimeout(r, 600));
+        setIsStub(true);
+        setResults(getFallbackResults(tensor));
       }
-
-      // Take top 5 and vary confidences slightly based on seed
-      const chosen = pool.slice(0, 5).map((r, idx) => ({
-        ...r,
-        confidence: Math.max(
-          0.5,
-          Math.min(0.98, r.confidence + (seededRand(seed, idx + 100) - 0.5) * 0.15),
-        ),
-      }));
-
-      // Sort descending by confidence
-      chosen.sort((a, b) => b.confidence - a.confidence);
-
-      setResults(chosen);
     } catch (e: unknown) {
+      console.error('Inference execution error:', e);
       setError(e instanceof Error ? e.message : 'Inference failed');
     } finally {
       setIsInferring(false);
@@ -151,8 +200,9 @@ export function usePhotoInference(): PhotoInferenceHook {
   const reset = useCallback(() => {
     setResults(null);
     setIsInferring(false);
+    setIsStub(false);
     setError(null);
   }, []);
 
-  return { results, isInferring, error, infer, reset };
+  return { results, isInferring, isStub, error, infer, reset };
 }

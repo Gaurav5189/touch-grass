@@ -19,6 +19,7 @@ export interface ModelCacheEntry {
   version: string;
   downloadedAt: number;
   sizeBytes: number;
+  modelBlob?: Blob;
 }
 
 export interface UserSettings {

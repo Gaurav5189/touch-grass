@@ -87,6 +87,7 @@ export function useModelDownload(defaultModelId: string = 'birdnet-v1'): ModelDo
           version,
           downloadedAt: Date.now(),
           sizeBytes: blob.size || totalExpected,
+          modelBlob: blob,
         });
 
         setInstalled(true);
