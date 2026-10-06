@@ -62,7 +62,7 @@ export function ModelManagerPage() {
   };
 
   return (
-    <section id="models" aria-label="Model manager" className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
       <div className="flex items-center gap-3">
         <Database className="w-6 h-6 text-[var(--primary)]" aria-hidden="true" />
         <h2 className="text-2xl font-bold">Model Manager</h2>
@@ -79,6 +79,6 @@ export function ModelManagerPage() {
         onDownload={handleDownload}
         onRemove={handleRemove}
       />
-    </section>
+    </div>
   );
 }

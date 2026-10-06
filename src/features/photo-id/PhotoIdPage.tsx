@@ -1,14 +1,34 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CameraCapture } from './components/CameraCapture';
 import { GalleryImport } from './components/GalleryImport';
 import { PhotoResults } from './components/PhotoResults';
 import { PhotoErrorBoundary } from './components/PhotoErrorBoundary';
 import { usePhotoInference } from './hooks/usePhotoInference';
 import { preprocessImageFromBlob } from './utils/imageProcessing';
+import { useObservations } from '../history/hooks/useObservations';
 
 export function PhotoIdPage() {
   const { results, isInferring, error: inferenceError, infer, reset } = usePhotoInference();
   const [isStub] = useState(true);
+  const { addObservation } = useObservations();
+
+  useEffect(() => {
+    if (results && results.length > 0) {
+      const top = results[0];
+      const isInsect =
+        top.species.toLowerCase().includes('bee') ||
+        top.species.toLowerCase().includes('butterfly') ||
+        top.species.toLowerCase().includes('lacewing');
+      addObservation({
+        type: isInsect ? 'insect' : 'plant',
+        species: top.species,
+        scientificName: top.scientificName,
+        confidence: top.confidence,
+        timestamp: Date.now(),
+        modelVersion: 'mobilenet-v3-stub',
+      }).catch((err) => console.error('Failed to auto-save photo observation:', err));
+    }
+  }, [results, addObservation]);
 
   const handleCapture = useCallback(
     async (blob: Blob) => {

@@ -14,11 +14,14 @@ export function AudioRecorder({ isRecording, onStart, onStop }: AudioRecorderPro
         <p className="text-sm text-[var(--text-muted)]">Press to record 3s of bird call</p>
         <button
           onClick={isRecording ? onStop : onStart}
-          disabled={isRecording}
-          className="px-6 py-3 rounded-full bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary)]/90 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
-          aria-label="Record bird call"
+          className={`px-6 py-3 rounded-full font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${
+            isRecording
+              ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+              : 'bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white'
+          }`}
+          aria-label={isRecording ? 'Stop recording bird call' : 'Record bird call'}
         >
-          {isRecording ? 'Recording...' : 'Record'}
+          {isRecording ? 'Stop Recording' : 'Record'}
         </button>
       </div>
     </div>

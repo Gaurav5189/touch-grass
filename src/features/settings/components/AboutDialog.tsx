@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Info, X, Github, ExternalLink } from 'lucide-react';
 
 export interface AboutDialogProps {
@@ -9,11 +10,11 @@ export interface AboutDialogProps {
 export function AboutDialog({ open, onClose }: AboutDialogProps) {
   const [showLicenses, setShowLicenses] = useState(false);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="About Touch Grass"
@@ -72,6 +73,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
           View on GitHub
         </a>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDB, ModelCacheEntry } from '../../../shared/utils/idb';
 import { ModelInfo } from '../types';
+import { MODEL_REGISTRY } from '../utils/modelRegistry';
 
 export function useModelManager() {
   const [models, setModels] = useState<ModelInfo[]>([]);
@@ -12,30 +13,7 @@ export function useModelManager() {
     const ids = new Set(all.map((m) => m.id));
     setInstalledIds(ids);
 
-    // Load registry (hard-coded for demo; in production from JSON)
-    const registry: ModelInfo[] = [
-      {
-        id: 'birdnet-onnx',
-        name: 'BirdNET-ONNX',
-        url: 'https://example.com/models/birdnet.onnx',
-        sizeBytes: 20_000_000,
-        version: '1.0.0',
-        region: 'Global',
-        installed: ids.has('birdnet-onnx'),
-        license: 'Apache-2.0',
-      },
-      {
-        id: 'mobilenet-plants',
-        name: 'MobileNetV3 Plants',
-        url: 'https://example.com/models/plants.onnx',
-        sizeBytes: 5_000_000,
-        version: '0.9.1',
-        region: 'Global',
-        installed: ids.has('mobilenet-plants'),
-        license: 'Apache-2.0',
-      },
-    ];
-    setModels(registry.map((m) => ({ ...m, installed: ids.has(m.id) })));
+    setModels(MODEL_REGISTRY.map((m) => ({ ...m, installed: ids.has(m.id) })));
   }, []);
 
   useEffect(() => {

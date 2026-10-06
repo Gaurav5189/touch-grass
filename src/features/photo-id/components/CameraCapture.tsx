@@ -16,14 +16,21 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
   const startCamera = useCallback(async () => {
     setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: facingMode } },
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } },
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+      }
       streamRef.current = stream;
       setIsActive(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.play().catch((err) => console.warn('Video play error:', err));
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Camera access denied');

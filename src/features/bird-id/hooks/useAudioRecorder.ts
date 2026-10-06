@@ -34,7 +34,17 @@ export function useAudioRecorder(durationMs = 3000): AudioRecorderHook {
       streamRef.current = stream;
       setPermission('granted');
 
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      let options: MediaRecorderOptions | undefined;
+      if (typeof MediaRecorder.isTypeSupported === 'function') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          options = { mimeType: 'audio/webm;codecs=opus' };
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          options = { mimeType: 'audio/mp4' };
+        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+          options = { mimeType: 'audio/aac' };
+        }
+      }
+      const recorder = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
       const chunkList: Blob[] = [];
 
@@ -43,7 +53,8 @@ export function useAudioRecorder(durationMs = 3000): AudioRecorderHook {
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(chunkList, { type: 'audio/webm' });
+        const mime = recorder.mimeType || (options ? options.mimeType : 'audio/webm');
+        const blob = new Blob(chunkList, { type: mime });
         setChunks((prev) => [
           ...prev,
           { blob, durationMs: Math.round(chunkList.length * 100), timestamp: Date.now() },

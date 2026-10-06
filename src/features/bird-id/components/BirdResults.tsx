@@ -1,4 +1,5 @@
-import { Play } from 'lucide-react';
+import { Play, Volume2 } from 'lucide-react';
+import { useState } from 'react';
 import { BirdPrediction } from '../utils/inference';
 
 export interface BirdResultsProps {
@@ -8,6 +9,42 @@ export interface BirdResultsProps {
 }
 
 export function BirdResults({ predictions, region, isStub = false }: BirdResultsProps) {
+  const [playingSpecies, setPlayingSpecies] = useState<string | null>(null);
+
+  const playBirdCall = (species: string) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(2200, now);
+      osc.frequency.exponentialRampToValueAtTime(3800, now + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(2400, now + 0.2);
+      osc.frequency.exponentialRampToValueAtTime(3600, now + 0.3);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.25, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+
+      setPlayingSpecies(species);
+      setTimeout(() => {
+        setPlayingSpecies(null);
+        ctx.close().catch(() => {});
+      }, 500);
+    } catch (e) {
+      console.warn('Playback error:', e);
+    }
+  };
+
   return (
     <section aria-label="Bird identification results" className="space-y-4">
       {isStub && (
@@ -31,10 +68,19 @@ export function BirdResults({ predictions, region, isStub = false }: BirdResults
               <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: `${pred.confidence * 100}%` }} />
             </div>
             <button
+              onClick={() => playBirdCall(pred.species)}
               className="mt-3 inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded"
               aria-label={`Play reference call for ${pred.species}`}
             >
-              <Play className="w-4 h-4" aria-hidden="true" /> Reference call
+              {playingSpecies === pred.species ? (
+                <>
+                  <Volume2 className="w-4 h-4 animate-bounce" aria-hidden="true" /> Playing call...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" aria-hidden="true" /> Reference call
+                </>
+              )}
             </button>
           </article>
         ))}
