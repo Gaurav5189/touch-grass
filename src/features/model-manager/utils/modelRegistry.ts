@@ -13,9 +13,9 @@ export const MODEL_REGISTRY: ModelInfo[] = [
   },
   {
     id: 'mobilenet-plants-v1',
-    name: 'MobileNetV3 Plants & Insects',
-    url: 'https://huggingface.co/onnxmodelzoo/mobilenetv3/resolve/main/model.onnx',
-    sizeBytes: 5_000_000,
+    name: 'MobileNetV2 Plants & Insects',
+    url: 'https://media.githubusercontent.com/media/onnx/models/main/validated/vision/classification/mobilenet/model/mobilenetv2-7.onnx',
+    sizeBytes: 4_956_208,
     version: '0.9.1',
     region: 'Global',
     installed: false,
