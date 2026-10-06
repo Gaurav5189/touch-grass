@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles, CheckCircle2 } from 'lucide-react';
 import { PhotoResult } from '../types';
 
 export interface PhotoResultsProps {
@@ -11,9 +11,14 @@ export function PhotoResults({ results, isStub }: PhotoResultsProps) {
 
   return (
     <section aria-label="Photo identification results" className="space-y-4">
-      {isStub && (
+      {isStub ? (
         <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 font-medium" role="note">
-          Demo results — using MobileNetV3 stub model (not real image inference). Real pipeline coming in Phase 2 milestone.
+          Offline preview: Download MobileNet in Model Manager for full on-device neural network detection.
+        </div>
+      ) : (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-xs text-green-800 font-medium flex items-center gap-1.5" role="note">
+          <CheckCircle2 className="w-4 h-4 text-green-600" aria-hidden="true" />
+          <span>On-device AI detection active (MobileNetV2 ONNX)</span>
         </div>
       )}
 

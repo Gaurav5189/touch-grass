@@ -10,7 +10,9 @@ export function useModelManager() {
   const refresh = useCallback(async () => {
     const db = await getDB();
     const all = await db.getAll('modelCache');
-    const ids = new Set(all.map((m) => m.id));
+    const ids = new Set(
+      all.filter((m) => m.modelBlob instanceof Blob && m.modelBlob.size > 0).map((m) => m.id),
+    );
     setInstalledIds(ids);
 
     setModels(MODEL_REGISTRY.map((m) => ({ ...m, installed: ids.has(m.id) })));
