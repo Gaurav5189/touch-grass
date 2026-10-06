@@ -7,17 +7,21 @@ export interface BirdPrediction {
   commonName?: string;
 }
 
-/** Simple deterministic hash from spectrogram frames to seed pseudo-random variation */
+/**
+ * Hash spectrogram frames into a seed using djb2 XOR variant.
+ * Samples 64 values per frame (up to 4 frames) so different recordings differ.
+ */
 function spectrogramSeed(frames: Float32Array[]): number {
-  let seed = 0;
+  let h = 5381;
   for (let f = 0; f < Math.min(frames.length, 4); f++) {
     const arr = frames[f];
-    const step = Math.max(1, Math.floor(arr.length / 16));
+    const step = Math.max(1, Math.floor(arr.length / 64));
     for (let i = 0; i < arr.length; i += step) {
-      seed = ((seed * 31 + Math.round(arr[i] * 1000)) | 0) >>> 0;
+      const v = ((arr[i] + 1) * 32767.5) | 0;
+      h = (((h << 5) + h) ^ v) >>> 0;
     }
   }
-  return seed;
+  return (h ^ frames.length) >>> 0;
 }
 
 /** Seeded pseudo-random number in [0,1) */

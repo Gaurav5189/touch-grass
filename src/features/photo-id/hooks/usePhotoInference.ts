@@ -9,14 +9,21 @@ export interface PhotoInferenceHook {
   reset: () => void;
 }
 
-/** Simple deterministic hash from tensor data to seed pseudo-random variation */
+/** 
+ * Hash tensor pixel data into a seed.
+ * Samples 64 evenly-spaced floats, maps each to a 16-bit integer,
+ * and chains with djb2 so visually different images give different seeds.
+ */
 function tensorSeed(tensor: Float32Array): number {
-  let seed = 0;
-  const step = Math.max(1, Math.floor(tensor.length / 32));
+  let h = 5381;
+  const step = Math.max(1, Math.floor(tensor.length / 64));
   for (let i = 0; i < tensor.length; i += step) {
-    seed = ((seed * 31 + Math.round(tensor[i] * 1000)) | 0) >>> 0;
+    // Scale to 0-65535 range to preserve fractional differences
+    const v = ((tensor[i] + 1) * 32767.5) | 0;
+    h = (((h << 5) + h) ^ v) >>> 0; // djb2 XOR variant
   }
-  return seed;
+  // XOR in length so even same-content tensors of different sizes differ
+  return (h ^ tensor.length) >>> 0;
 }
 
 /** Seeded pseudo-random number in [0,1) */
@@ -111,8 +118,8 @@ export function usePhotoInference(): PhotoInferenceHook {
       // Simulate inference latency
       await new Promise((r) => setTimeout(r, 600 + Math.random() * 400));
 
-      // Use tensor data to seed result selection so different images give different results
-      const seed = tensorSeed(tensor);
+      // Seed from image content XOR'd with timestamp — different images AND retries vary
+      const seed = (tensorSeed(tensor) ^ (Date.now() & 0xffff)) >>> 0;
 
       // Fisher-Yates shuffle with seeded PRNG
       const pool = [...ALL_RESULTS];

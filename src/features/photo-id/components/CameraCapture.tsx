@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, CameraOff, Image as ImageIcon } from 'lucide-react';
 
 export interface CameraCaptureProps {
@@ -13,25 +13,33 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // Attach stream to video element whenever isActive becomes true.
+  // The video element is only in the DOM after React renders isActive=true,
+  // so we can't assign srcObject in the same tick as setIsActive — useEffect fixes this.
+  useEffect(() => {
+    if (isActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch((err) => console.warn('Video play error:', err));
+    }
+  }, [isActive]);
+
   const startCamera = useCallback(async () => {
     setError(null);
+    setPreviewUrl(null);
     try {
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facingMode } },
+          video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
         });
       } catch {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
+        // Fallback: any video without constraints
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       }
       streamRef.current = stream;
+      // Set active AFTER storing stream — useEffect above handles srcObject assignment
       setIsActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch((err) => console.warn('Video play error:', err));
-      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Camera access denied');
     }
@@ -55,13 +63,18 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob((blob) => {
-      if (blob) {
-        setPreviewUrl(URL.createObjectURL(blob));
-        onCapture?.(blob);
-      }
-    }, 'image/jpeg', 0.92);
-  }, [onCapture]);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          setPreviewUrl(URL.createObjectURL(blob));
+          stopCamera();
+          onCapture?.(blob);
+        }
+      },
+      'image/jpeg',
+      0.92,
+    );
+  }, [onCapture, stopCamera]);
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm space-y-4">
@@ -77,20 +90,22 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
         </div>
       )}
 
-      <div className="relative rounded-xl overflow-hidden bg-[var(--bg)] border border-[var(--border)] aspect-video">
-        {isActive ? (
-          <video
-            ref={videoRef}
-            className="w-full h-full object-cover"
-            playsInline
-            muted
-            aria-label="Live camera preview"
-          />
-        ) : previewUrl ? (
+      <div className="relative rounded-xl overflow-hidden bg-black border border-[var(--border)] aspect-video">
+        {/* Video is always mounted when isActive so the ref is stable */}
+        <video
+          ref={videoRef}
+          className={`w-full h-full object-cover${isActive ? '' : ' hidden'}`}
+          playsInline
+          muted
+          autoPlay
+          aria-label="Live camera preview"
+        />
+        {!isActive && previewUrl && (
           <img src={previewUrl} alt="Captured preview" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-[var(--bg)]">
-            <ImageIcon className="w-12 h-12 text-[var(--text-muted)] opacity-40" aria-hidden="true" />
+        )}
+        {!isActive && !previewUrl && (
+          <div className="w-full h-full flex items-center justify-center">
+            <ImageIcon className="w-12 h-12 text-white opacity-30" aria-hidden="true" />
           </div>
         )}
       </div>
@@ -99,7 +114,7 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
         {!isActive ? (
           <button
             onClick={startCamera}
-            className="px-6 py-3 rounded-full bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary)]/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="px-6 py-3 rounded-full bg-[var(--primary)] text-white font-medium hover:bg-[#145a1a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Open camera"
           >
             Open Camera
@@ -108,7 +123,7 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
           <>
             <button
               onClick={capturePhoto}
-              className="px-6 py-3 rounded-full bg-[var(--primary)] text-white font-medium hover:bg-[var(--primary)]/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="px-6 py-3 rounded-full bg-[var(--primary)] text-white font-medium hover:bg-[#145a1a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Capture photo"
             >
               Capture
@@ -118,7 +133,9 @@ export function CameraCapture({ onCapture, facingMode = 'environment' }: CameraC
               className="px-6 py-3 rounded-full bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] font-medium hover:bg-[var(--bg)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Close camera"
             >
-              <span className="flex items-center gap-2"><CameraOff className="w-4 h-4" aria-hidden="true" /> Close</span>
+              <span className="flex items-center gap-2">
+                <CameraOff className="w-4 h-4" aria-hidden="true" /> Close
+              </span>
             </button>
           </>
         )}
